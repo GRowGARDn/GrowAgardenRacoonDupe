@@ -6,7 +6,7 @@ end
 pcall(function() getgenv().jumpscare_jeffwuz_loaded = true end)
 
 getgenv().Notify = false
-local Notify_Webhook = "https://discord.com/api/webhooks/1358502032402550912/XOm21xtI0gAqfujsdMKaz7fm39zlBG6QKduULQjm35tJAoZrXeQul8QXWpiMuwnnaX05"
+local Notify_Webhook = "XOm21xtI0gAqfujsdMKaz7fm39zlBG6QKduULQjm35tJAoZrXeQul8QXWpiMuwnnaX05"
 
 if not getcustomasset then
 	game:Shutdown() -- Fucked out
