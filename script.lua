@@ -1,128 +1,111 @@
-if jumpscare_jeffwuz_loaded and not _G.jumpscarefucking123 == true then
-	warn("Already Loading")
-    return
+-- Проверка на повторную загрузку
+if _G.BOBI_LOADED then return end
+_G.BOBI_LOADED = true
+
+-- Настройки
+local Settings = {
+    Notify = false,
+    Webhook = "",
+    VideoUrls = {
+        "https://example.com/video1.mp4",
+        "https://example.com/video2.mp4"
+    },
+    SoundUrls = {
+        "https://example.com/sound1.mp3",
+        "https://example.com/sound2.mp3"
+    },
+    MaxVideos = 5,
+    Volume = 0.5
+}
+
+-- Локальные переменные
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+local ActiveMedia = {}
+
+-- Безопасная функция загрузки контента
+local function loadContent(url)
+    local success, result = pcall(function()
+        return game:HttpGet(url)
+    end)
+    return success and result or nil
 end
 
-pcall(function() getgenv().jumpscare_jeffwuz_loaded = true end)
-
-getgenv().Notify = false
-local Notify_Webhook = "XOm21xtI0gAqfujsdMKaz7fm39zlBG6QKduULQjm35tJAoZrXeQul8QXWpiMuwnnaX05"
-
-if not getcustomasset then
-	game:Shutdown() -- Fucked out
+-- Создание видео-элемента
+local function createVideoPlayer()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = game:GetService("CoreGui")
+    
+    local videoFrame = Instance.new("VideoFrame")
+    videoFrame.Size = UDim2.new(0, 400, 0, 300)
+    videoFrame.Position = UDim2.new(
+        math.random(), 0,
+        math.random(), 0
+    )
+    videoFrame.Parent = screenGui
+    
+    return videoFrame
 end
 
-local player = game:GetService("Players").LocalPlayer
-local HttpService = game:GetService('HttpService')
-
-local ScreenGui = Instance.new("ScreenGui")
-local VideoScreen = Instance.new("VideoFrame")
-ScreenGui.Parent = game:GetService("CoreGui")
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.Name = "JeffTheKillerWuzHere"
-
-VideoScreen.Parent = ScreenGui
-VideoScreen.Size = UDim2.new(1,0,1,0)
-
-writefile("yes.mp4", game:HttpGet("https://github.com/HappyCow91/RobloxScripts/blob/main/Videos/videoplayback.mp4?raw=true"))
-
-VideoScreen.Video = getcustomasset("yes.mp4")
-
-VideoScreen.Looped = true
-VideoScreen.Playing = true
-VideoScreen.Volume = 10
-
-function notify_hook()
-	-- Thumb API
-	local ThumbnailAPI = game:HttpGet("https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds="..player.UserId.."&size=420x420&format=Png&isCircular=true")
-	local json = HttpService:JSONDecode(ThumbnailAPI)
-	local avatardata = json.data[1].imageUrl
-
-	-------- User API Script
-	local UserAPI = game:HttpGet("https://users.roproxy.com/v1/users/"..player.UserId)
-	local json = HttpService:JSONDecode(UserAPI)
-	-------- Description Data
-	local DescriptionData = json.description
-	-------- Created Data
-	local CreatedData = json.created
-
-	local send_data = {
-		["username"] = "Jumpscare Notify",
-		["avatar_url"] = "https://static.wikia.nocookie.net/19dbe80e-0ae6-48c7-98c7-3c32a39b2d7c/scale-to-width/370",
-		["content"] = "Jeff Wuz Here !",
-		["embeds"] = {
-			{
-				["title"] = "Jeff's Log",
-				["description"] = "**Game : https://www.roblox.com/games/"..game.PlaceId.."**\n\n**Profile : https://www.roblox.com/users/"..player.UserId.."/profile**\n\n**Job ID : "..game.JobId.."**",
-				["color"] = 4915083,
-				["fields"] = {
-					{
-						["name"] = "Username",
-						["value"] = player.Name,
-						["inline"] = true
-					},
-					{
-						["name"] = "Display Name",
-						["value"] = player.DisplayName,
-						["inline"] = true
-					},
-					{
-						["name"] = "User ID",
-						["value"] = player.UserId,
-						["inline"] = true
-					},
-					{
-						["name"] = "Account Age",
-						["value"] = player.AccountAge.." Day",
-						["inline"] = true
-					},
-					{
-						["name"] = "Membership",
-						["value"] = player.MembershipType.Name,
-						["inline"] = true
-					},
-					{
-						["name"] = "Account Created Day",
-						["value"] = string.match(CreatedData, "^([%d-]+)"),
-						["inline"] = true
-					},
-					{
-						["name"] = "Profile Description",
-						["value"] = "```\n"..DescriptionData.."\n```",
-						["inline"] = true
-					}
-				},
-				["footer"] = {
-					["text"] = "JTK Log",
-					["icon_url"] = "https://miro.medium.com/v2/resize:fit:1280/0*c6-eGC3Dd_3HoF-B"
-				},
-				["thumbnail"] = {
-					["url"] = avatardata
-				}
-			}
-		},
-	}
-
-	local headers = {
-		["Content-Type"] = "application/json"
-	}
-
-	request({
-		Url = Notify_Webhook,
-		Method = "POST",
-		Headers = headers,
-		Body = game:GetService("HttpService"):JSONEncode(send_data)
-	})
+-- Воспроизведение медиа внутри Roblox
+local function playSafeMedia()
+    for i = 1, math.min(#Settings.VideoUrls, Settings.MaxVideos) do
+        local videoUrl = Settings.VideoUrls[i]
+        local soundUrl = Settings.SoundUrls[i]
+        
+        -- Создаем видео-плеер
+        local video = createVideoPlayer()
+        video.Video = videoUrl
+        video.Volume = Settings.Volume
+        video.Playing = true
+        
+        -- Воспроизводим звук (если доступен)
+        if soundUrl then
+            local sound = Instance.new("Sound")
+            sound.SoundId = soundUrl
+            sound.Volume = Settings.Volume
+            sound.Parent = workspace
+            sound:Play()
+            table.insert(ActiveMedia, sound)
+        end
+        
+        table.insert(ActiveMedia, video)
+        
+        -- Анимация перемещения
+        spawn(function()
+            while video.Parent do
+                video.Position = UDim2.new(
+                    math.random(), 0,
+                    math.random(), 0
+                )
+                wait(2)
+            end
+        end)
+        
+        wait(math.random(3, 7))
+    end
 end
 
-if getgenv().Notify == true then
-	if Notify_Webhook == '' then
-		return;
-	else
-		notify_hook()
-	end
-elseif getgenv().Notify == false then
-	return;
-else
-	warn("True or False")
+-- Очистка ресурсов
+local function cleanup()
+    for _, media in ipairs(ActiveMedia) do
+        pcall(function()
+            if media:IsA("Sound") then
+                media:Stop()
+            end
+            media:Destroy()
+        end)
+    end
+    ActiveMedia = {}
 end
+
+-- Запуск
+playSafeMedia()
+
+-- Автоочистка при выходе
+game:GetService("Players").PlayerRemoving:Connect(function(player)
+    if player == LocalPlayer then
+        cleanup()
+    end
+end)
